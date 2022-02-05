@@ -22,23 +22,28 @@ inventario=[
 
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior, RecycleBoxLayout):
   ''' Adds selection and focus behaviour to the view. '''
+  touch_deselect_last = BooleanProperty(True)
 
 
-class SelectableLabel(RecycleDataViewBehavior, Label):
+class SelectableBoxLayout(RecycleDataViewBehavior, BoxLayout):
   ''' Add selection support to the Label '''
   index = None
   selected = BooleanProperty(False)
   selectable = BooleanProperty(True)
 
   def refresh_view_attrs(self, rv, index, data):
-    ''' Catch and handle the view changes '''
     self.index = index
-    return super(SelectableLabel, self).refresh_view_attrs(
+    self.ids['_hashtag'].text = str(1+index)
+    self.ids['_articulo'].text = data['nombre'].capitalize()
+    self.ids['_cantidad'].text = str(data['cantidad_carrito'])
+    self.ids['_precio_por_articulo'].text = str("{:.2f}".format(data['precio']))
+    self.ids['_precio'].text = str("{:.2f}".format(data['precio_total']))
+    return super(SelectableBoxLayout, self).refresh_view_attrs(
         rv, index, data)
 
   def on_touch_down(self, touch):
     ''' Add selection on touch down '''
-    if super(SelectableLabel, self).on_touch_down(touch):
+    if super(SelectableBoxLayout, self).on_touch_down(touch):
       return True
     if self.collide_point(*touch.pos) and self.selectable:
       return self.parent.select_with_touch(self.index, touch)
@@ -54,7 +59,7 @@ class SelectableLabel(RecycleDataViewBehavior, Label):
 class RV(RecycleView):
   def __init__(self, **kwargs):
     super(RV, self).__init__(**kwargs)
-    self.data = [{'text': str(x)} for x in range(100)]
+    self.data = []
 
 class VentasWindow(BoxLayout):
   def __init__(self, **kwargs):
@@ -63,9 +68,15 @@ class VentasWindow(BoxLayout):
   def agregar_producto_codigo(self, codigo):
     for producto in inventario:
       if codigo == producto['codigo']:
-        print("Encontrado", producto)
-      else:
-        print("No se encontro el producto.")
+        articulo = {}
+        articulo['codigo'] = producto['codigo']
+        articulo['nombre'] = producto['nombre']
+        articulo['precio'] = producto['precio']
+        articulo['cantidad_carrito'] = 1
+        articulo['cantidad_inventario'] = producto['cantidad']
+        articulo['precio_total'] = producto['precio']
+        self.ids.rvs.data.append(articulo)
+        break
 
   def agregar_producto_nombre(self, nombre):
     print("Se mando", nombre)
